@@ -1,0 +1,151 @@
+name: Build and Run
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    # We will run on all three OSes in a matrix
+    runs-on: ${{ matrix.os }}
+
+    # Set up the build matrix
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        compiler: [gcc, clang, msvc, mingw]
+        c_standard: [c99, c11, c17, c23]
+
+        # Exclude invalid combos.
+        exclude:
+          - os: ubuntu-latest
+            compiler: msvc
+          - os: ubuntu-latest
+            compiler: mingw
+          - os: macos-latest
+            compiler: msvc
+          - os: macos-latest
+            compiler: mingw
+          - os: windows-latest
+            compiler: msvc
+            c_standard: c99
+          - os: windows-latest
+            compiler: msvc
+            c_standard: c23
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      # -------------------------------------------------------
+      # Linux Setup (Ubuntu)
+      # -------------------------------------------------------
+      - name: Install compiler on Linux
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+
+          if [ "${{ matrix.compiler }}" = "gcc" ]; then
+            sudo apt-get install -y gcc
+          elif [ "${{ matrix.compiler }}" = "clang" ]; then
+            sudo apt-get install -y clang
+          fi
+
+      # -------------------------------------------------------
+      # macOS Setup
+      # -------------------------------------------------------
+      - name: Install compiler on macOS
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew update
+          # clang is pre-installed (Apple clang)
+          if [ "${{ matrix.compiler }}" = "gcc" ]; then
+            brew install gcc
+          fi
+
+      # -------------------------------------------------------
+      # Windows Setup
+      # -------------------------------------------------------
+      - name: Install compiler on Windows
+        if: matrix.os == 'windows-latest'
+        shell: powershell
+        run: |
+          # For MinGW-w64
+          if ('${{ matrix.compiler }}' -eq 'mingw') {
+            choco install mingw --version=8.1.0 -y
+          }
+
+          # For Clang on Windows
+          if ('${{ matrix.compiler }}' -eq 'clang') {
+            choco install llvm -y
+          }
+
+          # MSVC is already installed as part of the GitHub Actions windows-latest image
+          # but you might need to set up the environment with 'vcvarsall' if you want the latest toolset.
+
+      # -------------------------------------------------------
+      # Build
+      # -------------------------------------------------------
+      - name: Build program
+        run: |
+          set -e
+
+          OS="${{ matrix.os }}"
+          COMPILER="${{ matrix.compiler }}"
+          STD="${{ matrix.c_standard }}"
+
+          # By default, the executable name is 'dandd'.
+          # We'll adapt the build commands and standard flags per compiler.
+
+          if [ "$OS" = "Windows_NT" ]; then
+            REM="./dandd"  # We'll adjust how to run it
+          else
+            REM="./dandd"
+          fi
+
+          if [ "$COMPILER" = "gcc" ]; then
+            # On Linux/macOS, gcc is 'gcc'
+            # On Windows with MinGW, the 'gcc' is also in the path once installed
+            gcc -std=$STD dandd.c -o program
+
+          elif [ "$COMPILER" = "clang" ]; then
+            clang -std=$STD dandd.c -o program
+
+          elif [ "$COMPILER" = "mingw" ]; then
+            # On Windows with MinGW-w64, the command is typically 'gcc' as well, 
+            # but installed in e.g. C:\msys64\... or via choco. 
+            # We'll call it directly as 'gcc'
+            gcc -std=$STD dandd.c -o program.exe
+
+          elif [ "$COMPILER" = "msvc" ]; then
+            case "$STD" in
+              c11)
+                CL_STD="/std:c11"
+                ;;
+              c17)
+                CL_STD="/std:c17"
+                ;;
+              *)
+                CL_STD=""  # fallback
+                ;;
+            esac
+
+            # MSVC compile with cl.exe
+            # We must quote the source and output flags properly on Windows.
+            # Also run it in the MSVC developer shell environment in some cases.
+            cl $CL_STD dandd.c /Fe:dandd.exe
+
+          fi
+
+      # -------------------------------------------------------
+      # Run
+      # -------------------------------------------------------
+      - name: Run program
+        run: |
+          # On Windows, .exe is default, on Linux/macOS it's just an ELF/Mach-O
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            .\\dandd.exe
+          else
+            ./dandd
+          fi

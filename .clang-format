@@ -1,0 +1,34 @@
+# .clang-format
+---
+Language: Cpp           # For C code, clang-format uses the Cpp rules by default.
+BasedOnStyle: LLVM      # Start from LLVM style, then override below.
+
+# Indentation
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never           # Use spaces, never tabs.
+
+# Line length
+ColumnLimit: 100
+
+# Braces
+BreakBeforeBraces: Attach
+BraceWrapping:
+  AfterFunction: true     # Place a function’s opening brace on a new line.
+  AfterControlStatement: false
+  AfterNamespace: false
+  AfterStruct: false
+  AfterEnum: false
+  AfterClass: false
+
+# Pointers/references
+PointerAlignment: Right
+
+# Spacing
+SpaceAfterCStyleCast: false
+
+# Misc
+AlignTrailingComments: true
+AllowShortFunctionsOnASingleLine: Empty
+SortIncludes: true
+IndentCaseLabels: false   # Keep 'case' labels aligned with 'switch'.
