@@ -127,7 +127,7 @@ jobs:
           if ($Env:COMPILER -eq "msvc") {
             cl $msvcStdFlag dandd.c /Fe:dandd.exe
           }
-          elseif ($Env:COMPILER -eq "mingw") {
+          elseif ($Env:COMPILER -eq "gcc") {
             gcc "-std=$Env:C_STANDARD" dandd.c -o dandd.exe
           }
           elseif ($Env:COMPILER -eq "clang") {
