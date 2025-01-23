@@ -40,10 +40,6 @@ static inline Pos pos_from_slot(i32 slot) {
     return (Pos){.row = slot / 8, .col = slot % 8};
 }
 
-static inline i32 slot_from_pos(Pos pos) {
-    return (pos.row * 8) + pos.col;
-}
-
 static inline u64 slot_set(u64 m, i32 slot) {
     if (slot < 0 || slot >= 64) {
         return m;
@@ -164,7 +160,7 @@ void print_puzzle(Puzzle puzzle, u64 solution) {
 // checked for previous placements.
 
 // Check that the slot doesn't overlap a monster or treasure.
-bool check_doesnt_overlap(Puzzle puzzle, u64 solution, i32 slot) {
+bool check_doesnt_overlap(Puzzle puzzle, u64 solution) {
     // note(steve): This actually checks the whole solution but is faster than just checking the
     // slot.
     return !(solution & puzzle.treasures || solution & puzzle.monsters);
@@ -435,10 +431,9 @@ u64 solve(Puzzle puzzle, u64 *solutions, u64 max_solutions) {
         }
 
         // Check constraints.
-        if (check_doesnt_overlap(puzzle, solution, slot) &&
-            check_row_count(puzzle, solution, slot) && check_col_count(puzzle, solution, slot) &&
-            check_dead_ends(puzzle, solution, slot) && check_monsters(puzzle, solution, slot) &&
-            check_wide_space(puzzle, solution, slot) &&
+        if (check_doesnt_overlap(puzzle, solution) && check_row_count(puzzle, solution, slot) &&
+            check_col_count(puzzle, solution, slot) && check_dead_ends(puzzle, solution, slot) &&
+            check_monsters(puzzle, solution, slot) && check_wide_space(puzzle, solution, slot) &&
             check_treasure_rooms(puzzle, solution, slot)) {
 
             // Move on to the next slot.
@@ -521,7 +516,7 @@ u64 generate(GeneratedPuzzle *puzzles, u64 max_puzzles) {
 
         // @opt(steve): Broken out so they're easier to debug. Ideally should short circuit.
         bool invalid_monster = !is_invalid_monster(puzzle, solution, pos_from_slot(slot));
-        bool overlap = check_doesnt_overlap(puzzle, solution, slot);
+        bool overlap = check_doesnt_overlap(puzzle, solution);
         bool dead_ends = check_dead_ends(puzzle, solution, slot);
         bool monsters = check_monsters(puzzle, solution, slot);
         bool wide_space = check_wide_space(puzzle, solution, slot);
