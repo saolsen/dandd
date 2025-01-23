@@ -77,6 +77,10 @@ jobs:
             choco install llvm -y
           }
 
+      - name: Setup MSVC
+        if: matrix.compiler == 'msvc'
+        uses: ilammy/msvc-dev-cmd@v1
+
       # -------------------------------------------------------
       # Build and Run on Linux/macOS
       # (GitHub Actions uses Bash by default on these OSes)
