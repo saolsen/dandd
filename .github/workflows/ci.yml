@@ -14,7 +14,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         compiler: [gcc, clang, msvc, mingw]
-        c_standard: [c99, c11, c17, c23]
+        c_standard: [c99, c11, c17, c2x]
 
         # Exclude invalid compiler/OS combos:
         exclude:
@@ -32,7 +32,7 @@ jobs:
             c_standard: c99
           - os: windows-latest
             compiler: msvc
-            c_standard: c23
+            c_standard: c2x
 
     steps:
       - name: Check out code
@@ -117,33 +117,35 @@ jobs:
       - name: Build and run (Windows)
         if: runner.os == 'Windows'
         shell: powershell
+        env:
+          COMPILER: ${{ matrix.compiler }}      # Map matrix.compiler → $Env:COMPILER
+          C_STANDARD: ${{ matrix.c_standard }}  # Map matrix.c_standard → $Env:C_STANDARD
         run: |
           Write-Host "OS: Windows"
-          Write-Host "Compiler: $Env:compiler"
-          Write-Host "C Standard: $Env:c_standard"
+          Write-Host "Compiler: $Env:COMPILER"
+          Write-Host "C Standard: $Env:C_STANDARD"
 
           # Map the C standard for MSVC:
           $msvcStdFlag = ""
-          switch ($Env:c_standard) {
+          switch ($Env:C_STANDARD) {
+            "c99" { $msvcStdFlag = "/std:c11" }
             "c11" { $msvcStdFlag = "/std:c11" }
             "c17" { $msvcStdFlag = "/std:c17" }
+            "c23" { $msvcStdFlag = "/std:c2x" }
           }
 
-          if ($Env:compiler -eq "msvc") {
+          if ($Env:COMPILER -eq "msvc") {
             cl $msvcStdFlag dandd.c /Fe:dandd.exe
           }
-          elseif ($Env:compiler -eq "mingw") {
-            # MinGW's gcc
-            gcc -std=$Env:c_standard dandd.c -o dandd.exe
+          elseif ($Env:COMPILER -eq "mingw") {
+            gcc -std=$Env:C_STANDARD dandd.c -o dandd.exe
           }
-          elseif ($Env:compiler -eq "clang") {
-            # clang from LLVM package
-            clang -std=$Env:c_standard dandd.c -o dandd.exe
+          elseif ($Env:COMPILER -eq "clang") {
+            clang -std=$Env:C_STANDARD dandd.c -o dandd.exe
           }
           else {
-            Write-Host "Unknown compiler on Windows: $Env:compiler"
+            Write-Host "Unknown compiler on Windows: $Env:COMPILER"
             exit 1
           }
 
-          # Run the resulting program
           .\dandd.exe
