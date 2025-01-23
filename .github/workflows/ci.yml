@@ -98,9 +98,9 @@ jobs:
           STD="${{ matrix.c_standard }}"
 
           if [ "$COMP" = "gcc" ]; then
-            gcc -std=$STD dandd.c -o dandd
+            gcc -std=$STD -Wall -Wextra -Werror -Wconversion dandd.c -o dandd
           elif [ "$COMP" = "clang" ]; then
-            clang -std=$STD dandd.c -o dandd
+            clang -std=$STD -Wall -Wextra -Werror -Wconversion dandd.c -o dandd
           fi
 
           # Run the executable
@@ -132,10 +132,10 @@ jobs:
             cl $msvcStdFlag dandd.c /Fe:dandd.exe
           }
           elseif ($Env:COMPILER -eq "gcc") {
-            gcc "-std=$Env:C_STANDARD" dandd.c -o dandd.exe
+            gcc "-std=$Env:C_STANDARD" -Wall -Wextra -Werror -Wconversion dandd.c -o dandd.exe
           }
           elseif ($Env:COMPILER -eq "clang") {
-            clang "-std=$Env:C_STANDARD" dandd.c -o dandd.exe
+            clang "-std=$Env:C_STANDARD" -Wall -Wextra -Werror -Wconversion dandd.c -o dandd.exe
           }
           else {
             Write-Host "Unknown compiler on Windows: $Env:COMPILER"
