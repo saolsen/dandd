@@ -13,20 +13,15 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        compiler: [gcc, clang, msvc, mingw]
+        compiler: [gcc, clang, msvc]
         c_standard: [c99, c11, c17, c2x]
 
         # Exclude invalid compiler/OS combos:
         exclude:
-          # MSVC and MinGW only make sense on Windows
           - os: ubuntu-latest
             compiler: msvc
-          - os: ubuntu-latest
-            compiler: mingw
           - os: macos-latest
             compiler: msvc
-          - os: macos-latest
-            compiler: mingw
           - os: windows-latest
             compiler: msvc
             c_standard: c99
@@ -73,7 +68,7 @@ jobs:
         shell: powershell
         run: |
           # MinGW-w64
-          if ($Env:compiler -eq "mingw") {
+          if ($Env:compiler -eq "gcc") {
             choco install mingw --version=8.1.0 -y
           }
 
@@ -81,9 +76,6 @@ jobs:
           if ($Env:compiler -eq "clang") {
             choco install llvm -y
           }
-
-          # MSVC is already installed on windows-latest,
-          # but we can still configure environment if needed.
 
       # -------------------------------------------------------
       # Build and Run on Linux/macOS
@@ -128,20 +120,18 @@ jobs:
           # Map the C standard for MSVC:
           $msvcStdFlag = ""
           switch ($Env:C_STANDARD) {
-            "c99" { $msvcStdFlag = "/std:c11" }
             "c11" { $msvcStdFlag = "/std:c11" }
             "c17" { $msvcStdFlag = "/std:c17" }
-            "c23" { $msvcStdFlag = "/std:c2x" }
           }
 
           if ($Env:COMPILER -eq "msvc") {
             cl $msvcStdFlag dandd.c /Fe:dandd.exe
           }
           elseif ($Env:COMPILER -eq "mingw") {
-            gcc -std=$Env:C_STANDARD dandd.c -o dandd.exe
+            gcc "-std=$Env:C_STANDARD" dandd.c -o dandd.exe
           }
           elseif ($Env:COMPILER -eq "clang") {
-            clang -std=$Env:C_STANDARD dandd.c -o dandd.exe
+            clang "-std=$Env:C_STANDARD" dandd.c -o dandd.exe
           }
           else {
             Write-Host "Unknown compiler on Windows: $Env:COMPILER"
