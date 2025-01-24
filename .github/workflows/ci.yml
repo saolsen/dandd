@@ -4,7 +4,6 @@ on:
   push:
   pull_request:
 
-
 jobs:
   windows:
     runs-on: windows-latest
@@ -22,26 +21,42 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
-      - name: Install mingw (gcc)
+      - name: Deps (gcc)
         if: matrix.compiler == 'gcc'
         shell: powershell
         run: choco install mingw --version=8.1.0 -y
       
-      - name: Install clang
+      - name: Deps (clang)
         if: matrix.compiler == 'clang'
         shell: powershell
         run: choco install llvm -y
       
-      - name: Configure msvc
+      - name: Deps (msvc)
         if: matrix.compiler == 'msvc'
         uses: ilammy/msvc-dev-cmd@v1
 
+      - name: Build and run (gcc)
+        if: matrix.compiler == 'gcc'
+        env:
+          C_STANDARD: ${{ matrix.c_standard }}
+        run: |
+          gcc "-std=$Env:C_STANDARD" -Wall -Wextra -Werror -Wconversion dandd.c -o dandd.exe
+          .\dandd.exe
+
+      - name: Build and run (clang)
+        if: matrix.compiler == 'clang'
+        env:
+          C_STANDARD: ${{ matrix.c_standard }}
+        run: |
+          clang "-std=$Env:C_STANDARD" -Wall -Wextra -Werror -Wconversion -fsanitize=address -fno-omit-frame-pointer dandd.c -o dandd.exe
+          .\dandd.exe
+
       - name: Build and run (msvc)
-        if: runner.os == 'Windows' && matrix.compiler == 'msvc'
+        if: matrix.compiler == 'msvc'
         shell: powershell
         env:
-          CC: ${{ matrix.compiler }}      # Map matrix.compiler → $Env:CC
-          C_STANDARD: ${{ matrix.c_standard }}  # Map matrix.c_standard → $Env:C_STANDARD
+          CC: ${{ matrix.compiler }}
+          C_STANDARD: ${{ matrix.c_standard }}
         run: |
           $msvcStdFlag = ""
           switch ($Env:C_STANDARD) {
@@ -50,22 +65,6 @@ jobs:
           }
 
           cl $msvcStdFlag dandd.c /Fe:dandd.exe
-          .\dandd.exe
-
-      - name: Build and run (gcc)
-        if: runner.os == 'Windows' && matrix.compiler == 'gcc'
-        env:
-          C_STANDARD: ${{ matrix.c_standard }}
-        run: |
-          gcc "-std=$Env:C_STANDARD" -Wall -Wextra -Werror -Wconversion dandd.c -o dandd.exe
-          .\dandd.exe
-
-      - name: Build and run (clang)
-        if: runner.os == 'Windows' && matrix.compiler == 'clang'
-        env:
-          C_STANDARD: ${{ matrix.c_standard }}
-        run: |
-          clang "-std=$Env:C_STANDARD" -Wall -Wextra -Werror -Wconversion -fsanitize=address -fno-omit-frame-pointer dandd.c -o dandd.exe
           .\dandd.exe
 
   macos:
@@ -79,21 +78,22 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
-      - name: Install gcc
+      - name: Deps (gcc)
         if: matrix.compiler == 'gcc'
         run: brew install -q gcc
 
-      - name: Build and run (gcc/clang)
+      - name: Build and run (gcc)
+        if: matrix.compiler == 'gcc'
+        run: |
+          gcc-14 -std=${{ matrix.c_standard }} -Wall -Wextra -Werror -Wconversion dandd.c -o dandd
+          .\dandd
+
+      - name: Build and run (clang)
+        if: matrix.compiler == 'clang'
         env:
-          CC: ${{ matrix.compiler }}
           MallocNanoZone: 0
         run: |
-          # Normal "gcc" is aliased to clang on macOS, use the homebrew one.
-          if [ "${{ matrix.compiler }}" = "gcc" ]; then
-            CC=gcc-14 
-          fi
-
-          $CC -std=${{ matrix.c_standard }} -Wall -Wextra -Werror -Wconversion -fsanitize=address -fno-omit-frame-pointer dandd.c -o dandd
+          clang -std=${{ matrix.c_standard }} -Wall -Wextra -Werror -Wconversion -fsanitize=address -fno-omit-frame-pointer dandd.c -o dandd
           ./dandd
 
   linux:
@@ -107,14 +107,14 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
-      - name: Install gcc
+      - name: Deps (gcc)
         if: matrix.compiler == 'gcc'
         shell: bash
         run: |
           sudo apt-get update
           sudo apt-get install -y gcc
 
-      - name: Install clang
+      - name: Deps (clang)
         if: matrix.compiler == 'clang'
         shell: bash
         run: |
@@ -122,8 +122,6 @@ jobs:
           sudo apt-get install -y clang
 
       - name: Build and run (gcc/clang)
-        env:
-          CC: ${{ matrix.compiler }}
         run: |
-          $CC -std=${{ matrix.c_standard }} -Wall -Wextra -Werror -Wconversion -fsanitize=address -fno-omit-frame-pointer dandd.c -o dandd
+          ${{ matrix.compiler }} -std=${{ matrix.c_standard }} -Wall -Wextra -Werror -Wconversion -fsanitize=address -fno-omit-frame-pointer dandd.c -o dandd
           ./dandd
