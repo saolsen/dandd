@@ -11,8 +11,8 @@ CC -o dandd ./dandd.c
 ./dandd
 ```
 
-It should run with any modern c compiler under any modern c version (>= c99). You can look at the github actions workflow file for examples of how to build it on various platforms. The github actions workflow tests that it works on these os/compiler/c-version.
-* windows
+It should run with any modern c compiler under any modern c version (>= c99). You can look at the github actions workflow file for examples of how to build it on various platforms. The github actions workflow tests that it works on these os/compiler/c-version. (It also runs it under address sanitizer where applicable.)
+* windows 
   * mingw-64 (c99, c11, c17, c2x)
   * clang (c99, c11, c17, c2x)
   * msvc (c11, c17)
