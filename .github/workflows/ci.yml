@@ -89,136 +89,34 @@ jobs:
           $CC -std=${{ matrix.c_standard }} -Wall -Wextra -Werror -Wconversion dandd.c -o dandd
           ./dandd
 
+    linux:
+      runs-on: ubuntu-24.04
+      strategy:
+        fail-fast: false
+        matrix:
+          compiler: [gcc, clang]
+          c_standard: [c99, c11, c17, c2x]
+      steps:
+        - name: Check out code
+          uses: actions/checkout@v3
 
-  build-and-test:
-    # We'll run on each OS from the matrix below
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-24.04, macos-latest, windows-latest]
-        compiler: [gcc, clang, msvc]
-        c_standard: [c99, c11, c17, c2x]
-
-        # Exclude invalid compiler/OS combos:
-        exclude:
-          - os: ubuntu-24.04
-            compiler: msvc
-          - os: macos-latest
-            compiler: msvc
-          - os: windows-latest
-            compiler: msvc
-            c_standard: c99
-          - os: windows-latest
-            compiler: msvc
-            c_standard: c2x
-
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v3
-
-      # -------------------------------------------------------
-      # Install compilers on Linux (ubuntu-24.04)
-      # -------------------------------------------------------
-      - name: Install compiler (Linux)
-        if: runner.os == 'Linux'
-        shell: bash
-        run: |
-          sudo apt-get update
-          if [ "${{ matrix.compiler }}" = "gcc" ]; then
+        - name: Install gcc
+          if: matrix.compiler == 'gcc'
+          shell: bash
+          run: |
+            sudo apt-get update
             sudo apt-get install -y gcc
-          elif [ "${{ matrix.compiler }}" = "clang" ]; then
+
+        - name: Install clang
+          if: matrix.compiler == 'clang'
+          shell: bash
+          run: |
+            sudo apt-get update
             sudo apt-get install -y clang
-          fi
 
-      # -------------------------------------------------------
-      # Install compilers on macOS (macos-latest)
-      # -------------------------------------------------------
-      - name: Install compiler (macOS)
-        if: runner.os == 'macOS'
-        shell: bash
-        run: |
-          brew update
-          if [ "${{ matrix.compiler }}" = "gcc" ]; then
-            brew install -q gcc
-          fi
-          # Clang (Apple Clang) is already present on macOS runners.
-
-      # -------------------------------------------------------
-      # Install compilers on Windows (windows-latest)
-      # -------------------------------------------------------
-      - name: Install compiler (Windows)
-        if: runner.os == 'Windows'
-        shell: powershell
-        run: |
-          # MinGW-w64
-          if ($Env:compiler -eq "gcc") {
-            choco install mingw --version=8.1.0 -y
-          }
-
-          # Clang/LLVM
-          if ($Env:compiler -eq "clang") {
-            choco install llvm -y
-          }
-
-      - name: Setup MSVC
-        if: matrix.compiler == 'msvc'
-        uses: ilammy/msvc-dev-cmd@v1
-
-      # -------------------------------------------------------
-      # Build and Run on Linux/macOS
-      # (GitHub Actions uses Bash by default on these OSes)
-      # -------------------------------------------------------
-      - name: Build and run (Linux/macOS)
-        if: runner.os != 'Windows'
-        shell: bash
-        run: |
-          set -e
-          echo "OS: ${{ matrix.os }}"
-          echo "Compiler: ${{ matrix.compiler }}"
-          echo "C Standard: ${{ matrix.c_standard }}"
-
-          OS="${{ matrix.os }}"
-          CC="${{ matrix.compiler }}"
-          STD="${{ matrix.c_standard }}"
-          
-          # Normal "gcc" is aliased to clang on macOS, use the homebrew one.
-          if [ "$CC" = "gcc" ] && [ "$OS" = "macos-latest" ]; then
-            CC=gcc-14 
-          fi
-          
-          $CC -std=$STD -Wall -Wextra -Werror -Wconversion dandd.c -o dandd
-
-          # Run the executable
-          ./dandd
-
-      # -------------------------------------------------------
-      # Build and Run on Windows
-      # (By default, GitHub Actions uses PowerShell on Windows)
-      # -------------------------------------------------------
-      - name: Build and run (Windows)
-        if: runner.os == 'Windows'
-        shell: powershell
-        env:
-          CC: ${{ matrix.compiler }}      # Map matrix.compiler → $Env:CC
-          C_STANDARD: ${{ matrix.c_standard }}  # Map matrix.c_standard → $Env:C_STANDARD
-        run: |
-          Write-Host "OS: Windows"
-          Write-Host "Compiler: $Env:COMPILER"
-          Write-Host "C Standard: $Env:C_STANDARD"
-
-          # Map the C standard for MSVC:
-          $msvcStdFlag = ""
-          switch ($Env:C_STANDARD) {
-            "c11" { $msvcStdFlag = "/std:c11" }
-            "c17" { $msvcStdFlag = "/std:c17" }
-          }
-
-          if ($Env:CC -eq "msvc") {
-            cl $msvcStdFlag dandd.c /Fe:dandd.exe
-          } else {
-            & "$Env:CC" "-std=$Env:C_STANDARD" -Wall -Wextra -Werror -Wconversion dandd.c -o dandd.exe
-          }
-
-          .\dandd.exe
+        - name: Build and run (gcc/clang)
+          env:
+            CC: ${{ matrix.compiler }}
+          run: |
+            $CC -std=${{ matrix.c_standard }} -Wall -Wextra -Werror -Wconversion dandd.c -o dandd
+            ./dandd
