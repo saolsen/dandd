@@ -94,14 +94,16 @@ jobs:
           echo "Compiler: ${{ matrix.compiler }}"
           echo "C Standard: ${{ matrix.c_standard }}"
 
-          COMP="${{ matrix.compiler }}"
+          OS="${{ matrix.os }}"
+          CC="${{ matrix.compiler }}"
           STD="${{ matrix.c_standard }}"
-
-          if [ "$COMP" = "gcc" ]; then
-            gcc -std=$STD -Wall -Wextra -Werror -Wconversion dandd.c -o dandd
-          elif [ "$COMP" = "clang" ]; then
-            clang -std=$STD -Wall -Wextra -Werror -Wconversion dandd.c -o dandd
+          
+          # Normal "gcc" is aliased to clang on macOS, use the homebrew one.
+          if [ "$CC" = "gcc" ] && [ "$OS" = "macos-latest" ]; then
+            CC=gcc-14 
           fi
+          
+          $CC -std=$STD -Wall -Wextra -Werror -Wconversion dandd.c -o dandd
 
           # Run the executable
           ./dandd
