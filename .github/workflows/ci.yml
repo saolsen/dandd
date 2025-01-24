@@ -18,49 +18,49 @@ jobs:
             c_standard: c99
           - compiler: msvc
             c_standard: c2x
-      steps:
-        - name: Check out code
-          uses: actions/checkout@v3
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
 
-        - name: Install mingw (gcc)
-          if: matrix.compiler == 'gcc'
-          shell: powershell
-          run: choco install mingw --version=8.1.0 -y
-        
-        - name: Install clang
-          if: matrix.compiler == 'clang'
-          shell: powershell
-          run: choco install llvm -y
-        
-        - name: Configure msvc
-          if: matrix.compiler == 'msvc'
-          uses: ilammy/msvc-dev-cmd@v1
+      - name: Install mingw (gcc)
+        if: matrix.compiler == 'gcc'
+        shell: powershell
+        run: choco install mingw --version=8.1.0 -y
+      
+      - name: Install clang
+        if: matrix.compiler == 'clang'
+        shell: powershell
+        run: choco install llvm -y
+      
+      - name: Configure msvc
+        if: matrix.compiler == 'msvc'
+        uses: ilammy/msvc-dev-cmd@v1
 
-        - name: Build and run (msvc)
-          if: runner.os == 'Windows' && matrix.compiler == 'msvc'
-          shell: powershell
-          env:
-            CC: ${{ matrix.compiler }}      # Map matrix.compiler → $Env:CC
-            C_STANDARD: ${{ matrix.c_standard }}  # Map matrix.c_standard → $Env:C_STANDARD
-          run: |
-            $msvcStdFlag = ""
-            switch ($Env:C_STANDARD) {
-              "c11" { $msvcStdFlag = "/std:c11" }
-              "c17" { $msvcStdFlag = "/std:c17" }
-            }
+      - name: Build and run (msvc)
+        if: runner.os == 'Windows' && matrix.compiler == 'msvc'
+        shell: powershell
+        env:
+          CC: ${{ matrix.compiler }}      # Map matrix.compiler → $Env:CC
+          C_STANDARD: ${{ matrix.c_standard }}  # Map matrix.c_standard → $Env:C_STANDARD
+        run: |
+          $msvcStdFlag = ""
+          switch ($Env:C_STANDARD) {
+            "c11" { $msvcStdFlag = "/std:c11" }
+            "c17" { $msvcStdFlag = "/std:c17" }
+          }
 
-            cl $msvcStdFlag dandd.c /Fe:dandd.exe
-            .\dandd.exe
+          cl $msvcStdFlag dandd.c /Fe:dandd.exe
+          .\dandd.exe
 
-        - name: Build and run (gcc/clang)
-          if: runner.os == 'Windows' && matrix.compiler != 'msvc'
-          env:
-            CC: ${{ matrix.compiler }}      # Map matrix.compiler → $Env:CC
-            C_STANDARD: ${{ matrix.c_standard }}  # Map matrix.c_standard → $Env:C_STANDARD
-          run: |
-            & "$Env:CC" "-std=$Env:C_STANDARD" -Wall -Wextra -Werror -Wconversion dandd.c -o dandd.exe
+      - name: Build and run (gcc/clang)
+        if: runner.os == 'Windows' && matrix.compiler != 'msvc'
+        env:
+          CC: ${{ matrix.compiler }}      # Map matrix.compiler → $Env:CC
+          C_STANDARD: ${{ matrix.c_standard }}  # Map matrix.c_standard → $Env:C_STANDARD
+        run: |
+          & "$Env:CC" "-std=$Env:C_STANDARD" -Wall -Wextra -Werror -Wconversion dandd.c -o dandd.exe
 
-            .\dandd.exe
+          .\dandd.exe
 
   build-and-test:
     # We'll run on each OS from the matrix below
