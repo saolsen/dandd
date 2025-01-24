@@ -86,7 +86,7 @@ jobs:
         if: matrix.compiler == 'gcc'
         run: |
           gcc-14 -std=${{ matrix.c_standard }} -Wall -Wextra -Werror -Wconversion dandd.c -o dandd
-          .\dandd
+          ./dandd
 
       - name: Build and run (clang)
         if: matrix.compiler == 'clang'
