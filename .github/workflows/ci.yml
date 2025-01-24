@@ -133,7 +133,7 @@ jobs:
           if ($Env:CC -eq "msvc") {
             cl $msvcStdFlag dandd.c /Fe:dandd.exe
           } else {
-            "$Env:CC" "-std=$Env:C_STANDARD" -Wall -Wextra -Werror -Wconversion dandd.c -o dandd.exe
+            & "$Env:CC" "-std=$Env:C_STANDARD" -Wall -Wextra -Werror -Wconversion dandd.c -o dandd.exe
           }
 
           .\dandd.exe
