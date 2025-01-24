@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -13,9 +14,9 @@
 
 // Print the solution in a matrix format, helpful for debugging.
 void print_grid(u64 result) {
-    printf("grid: %llu\n", result);
+    printf("grid: %" PRIu64 "\n", result);
     for (u64 i = 0; i < 64; i++) {
-        printf("%llu", (result >> (63 - i)) & 1);
+        printf("%" PRIu64, (result >> (63 - i)) & 1);
         if (i % 8 == 7) {
             printf("\n");
         }
@@ -550,7 +551,7 @@ u64 generate(GeneratedPuzzle *puzzles, u64 max_puzzles) {
 #if 0
             // @note(steve): Good place to debug stuff. For example this code looks at puzzles with more than one solution.
             if (num_valid_puzzle_solutions != 1) {
-                printf("found puzzle with %llu solutions\n", num_valid_puzzle_solutions);
+                printf("found puzzle with %" PRIu64 " solutions\n", num_valid_puzzle_solutions);
                 printf("Generated Solution\n");
                 print_puzzle(valid_puzzle, solution);
                 printf("Solver Solution 0\n");
@@ -589,9 +590,9 @@ int main(void) {
     Puzzle p = puzzle(args);
     u64 solutions[32];
     u64 num_solutions = solve(p, solutions, 32);
-    printf("num solutions: %llu\n", num_solutions);
+    printf("num solutions: %" PRIu64 "\n", num_solutions);
     for (u64 i = 0; i < num_solutions; i++) {
-        printf("Solution %llu\n", i);
+        printf("Solution %" PRIu64 "\n", i);
         print_puzzle(p, solutions[i]);
     }
 
@@ -601,10 +602,10 @@ int main(void) {
     // take a long time.
     GeneratedPuzzle puzzles[8];
     u64 num_puzzles = generate(puzzles, 8);
-    printf("Num generated puzzles: %llu\n\n", num_puzzles);
+    printf("Num generated puzzles: %" PRIu64 "\n\n", num_puzzles);
     for (u64 i = 0; i < num_puzzles; i++) {
-        printf("Puzzle: %llu\n", i);
-        printf("Has %llu solutions\n", puzzles[i].num_solutions);
+        printf("Puzzle: %" PRIu64 "\n", i);
+        printf("Has %" PRIu64 " solutions\n", puzzles[i].num_solutions);
         print_puzzle(puzzles[i].puzzle, 0);
         printf("\n");
     }
