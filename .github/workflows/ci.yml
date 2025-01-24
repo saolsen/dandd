@@ -5,6 +5,29 @@ on:
   pull_request:
 
 jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        c_standard: [c99, c11, c17, c2x]
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Deps (clang-format, clang-tidy)
+        run: sudo apt-get install -y clang-format clang-tidy
+
+      - name: Run clang-format
+        run: clang-format -i dandd.c
+        continue-on-error: true
+
+      - name: Check for changes
+        run: git diff --exit-code
+
+      - name: Run clang-tidy
+        run: clang-tidy dandd.c -- -std=${{ matrix.c_standard }} -Wall -Wextra -Werror -Wconversion
+
   windows:
     runs-on: windows-latest
     strategy:
