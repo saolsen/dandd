@@ -116,7 +116,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: powershell
         env:
-          COMPILER: ${{ matrix.compiler }}      # Map matrix.compiler → $Env:COMPILER
+          CC: ${{ matrix.compiler }}      # Map matrix.compiler → $Env:CC
           C_STANDARD: ${{ matrix.c_standard }}  # Map matrix.c_standard → $Env:C_STANDARD
         run: |
           Write-Host "OS: Windows"
@@ -130,18 +130,10 @@ jobs:
             "c17" { $msvcStdFlag = "/std:c17" }
           }
 
-          if ($Env:COMPILER -eq "msvc") {
+          if ($Env:CC -eq "msvc") {
             cl $msvcStdFlag dandd.c /Fe:dandd.exe
-          }
-          elseif ($Env:COMPILER -eq "gcc") {
-            gcc "-std=$Env:C_STANDARD" -Wall -Wextra -Werror -Wconversion dandd.c -o dandd.exe
-          }
-          elseif ($Env:COMPILER -eq "clang") {
-            clang "-std=$Env:C_STANDARD" -Wall -Wextra -Werror -Wconversion dandd.c -o dandd.exe
-          }
-          else {
-            Write-Host "Unknown compiler on Windows: $Env:COMPILER"
-            exit 1
+          } else {
+            "$ENV:CC" "-std=$Env:C_STANDARD" -Wall -Wextra -Werror -Wconversion dandd.c -o dandd.exe
           }
 
           .\dandd.exe
