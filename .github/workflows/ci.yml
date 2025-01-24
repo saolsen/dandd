@@ -56,7 +56,7 @@ jobs:
         run: |
           brew update
           if [ "${{ matrix.compiler }}" = "gcc" ]; then
-            brew install gcc
+            brew install -q gcc
           fi
           # Clang (Apple Clang) is already present on macOS runners.
 
