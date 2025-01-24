@@ -52,14 +52,20 @@ jobs:
           cl $msvcStdFlag dandd.c /Fe:dandd.exe
           .\dandd.exe
 
-      - name: Build and run (gcc/clang)
-        if: runner.os == 'Windows' && matrix.compiler != 'msvc'
+      - name: Build and run (gcc)
+        if: runner.os == 'Windows' && matrix.compiler == 'gcc'
         env:
-          CC: ${{ matrix.compiler }}      # Map matrix.compiler → $Env:CC
-          C_STANDARD: ${{ matrix.c_standard }}  # Map matrix.c_standard → $Env:C_STANDARD
+          C_STANDARD: ${{ matrix.c_standard }}
         run: |
-          & "$Env:CC" "-std=$Env:C_STANDARD" -Wall -Wextra -Werror -Wconversion dandd.c -o dandd.exe
+          gcc "-std=$Env:C_STANDARD" -Wall -Wextra -Werror -Wconversion dandd.c -o dandd.exe
+          .\dandd.exe
 
+      - name: Build and run (clang)
+        if: runner.os == 'Windows' && matrix.compiler == 'clang'
+        env:
+          C_STANDARD: ${{ matrix.c_standard }}
+        run: |
+          clang "-std=$Env:C_STANDARD" -Wall -Wextra -Werror -Wconversion -fsanitize=address -fno-omit-frame-pointer dandd.c -o dandd.exe
           .\dandd.exe
 
   macos:
@@ -80,13 +86,14 @@ jobs:
       - name: Build and run (gcc/clang)
         env:
           CC: ${{ matrix.compiler }}
+          MallocNanoZone: 0
         run: |
           # Normal "gcc" is aliased to clang on macOS, use the homebrew one.
           if [ "${{ matrix.compiler }}" = "gcc" ]; then
             CC=gcc-14 
           fi
 
-          $CC -std=${{ matrix.c_standard }} -Wall -Wextra -Werror -Wconversion dandd.c -o dandd
+          $CC -std=${{ matrix.c_standard }} -Wall -Wextra -Werror -Wconversion -fsanitize=address -fno-omit-frame-pointer dandd.c -o dandd
           ./dandd
 
   linux:
@@ -118,5 +125,5 @@ jobs:
         env:
           CC: ${{ matrix.compiler }}
         run: |
-          $CC -std=${{ matrix.c_standard }} -Wall -Wextra -Werror -Wconversion dandd.c -o dandd
+          $CC -std=${{ matrix.c_standard }} -Wall -Wextra -Werror -Wconversion -fsanitize=address -fno-omit-frame-pointer dandd.c -o dandd
           ./dandd
