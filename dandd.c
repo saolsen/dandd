@@ -37,46 +37,46 @@ typedef struct {
 // out-of-bounds, but they still round trip correctly, and we don't rely on out-of-bounds values
 // "meaning" anything other than just being out of bounds.
 
-static inline Pos pos_from_slot(i32 slot) {
+Pos pos_from_slot(i32 slot) {
     return (Pos){.row = slot / 8, .col = slot % 8};
 }
 
-static inline u64 slot_set(u64 m, i32 slot) {
+u64 slot_set(u64 m, i32 slot) {
     if (slot < 0 || slot >= 64) {
         return m;
     }
     return m | (u64)1 << (63 - slot);
 }
 
-static inline u64 slot_unset(u64 m, i32 slot) {
+u64 slot_unset(u64 m, i32 slot) {
     if (slot < 0 || slot >= 64) {
         return m;
     }
     return m & ~((u64)1 << (63 - slot));
 }
 
-static inline u64 slot_is_set(u64 m, i32 slot) {
+u64 slot_is_set(u64 m, i32 slot) {
     if (slot < 0 || slot >= 64) {
         return 0;
     }
     return m & (u64)1 << (63 - slot);
 }
 
-static inline u64 pos_set(u64 m, Pos pos) {
+u64 pos_set(u64 m, Pos pos) {
     if (pos.row < 0 || pos.row >= 8 || pos.col < 0 || pos.col >= 8) {
         return m;
     }
     return m | (u64)1 << (63 - (pos.row * 8 + pos.col));
 }
 
-static inline u64 pos_unset(u64 m, Pos pos) {
+u64 pos_unset(u64 m, Pos pos) {
     if (pos.row < 0 || pos.row >= 8 || pos.col < 0 || pos.col >= 8) {
         return m;
     }
     return m & ~((u64)1 << (63 - (pos.row * 8 + pos.col)));
 }
 
-static inline u64 pos_is_set(u64 m, Pos pos) {
+u64 pos_is_set(u64 m, Pos pos) {
     if (pos.row < 0 || pos.row >= 8 || pos.col < 0 || pos.col >= 8) {
         return 0;
     }
